@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Replate — Smart Surplus Food Distribution Platform</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-emerald-600 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Brand Logo & Identity -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('landing')">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-600/20 text-white font-black text-2xl">
+            🍃
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-xl tracking-tight text-slate-900">Replate</span>
+              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Smart Food Rescue
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block">Smart Surplus Food Distribution Platform</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs / Role Switcher -->
+        <nav class="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 text-xs font-semibold">
+          <button data-nav-tab="landing" class="px-4 py-2 rounded-xl transition bg-emerald-50 text-emerald-700 font-bold">
+            Explore Food
+          </button>
+          <button data-nav-tab="donor" class="px-4 py-2 rounded-xl transition text-slate-600 hover:text-slate-900">
+            Food Donor
+          </button>
+          <button data-nav-tab="receiver" class="px-4 py-2 rounded-xl transition text-slate-600 hover:text-slate-900">
+            NGO & Shelters
+          </button>
+          <button data-nav-tab="volunteer" class="px-4 py-2 rounded-xl transition text-slate-600 hover:text-slate-900">
+            Volunteer
+          </button>
+          <button data-nav-tab="admin" class="px-4 py-2 rounded-xl transition text-slate-600 hover:text-slate-900">
+            Admin
+          </button>
+        </nav>
+
+        <!-- Right Action Controls -->
+        <div class="flex items-center gap-3">
+          <!-- Notification Bell -->
+          <button onclick="toggleNotificationDrawer()" title="View Notifications" class="relative p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 transition">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="top-notification-badge" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center animate-pulse">
+              3
+            </span>
+          </button>
+
+          <!-- Primary CTA Button -->
+          <button onclick="switchTab('donor')" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm shadow-emerald-600/20 flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Donate Surplus Food</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Sub-Header Navigation Bar -->
+  <div class="lg:hidden bg-white border-b border-slate-200 px-4 py-2.5 overflow-x-auto flex gap-2">
+    <button data-nav-tab="landing" class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap bg-emerald-50 text-emerald-700">Explore</button>
+    <button data-nav-tab="donor" class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap text-slate-600">Donor</button>
+    <button data-nav-tab="receiver" class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap text-slate-600">NGO & Shelters</button>
+    <button data-nav-tab="volunteer" class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap text-slate-600">Volunteer</button>
+    <button data-nav-tab="admin" class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap text-slate-600">Admin</button>
+  </div>
+
+  <!-- Main View Container -->
+  <main class="min-h-screen">
+
+    <!-- ================================================================ -->
+    <!-- TAB 1: HOMEPAGE & SURPLUS DISCOVERY LANDING PAGE -->
+    <!-- ================================================================ -->
+    <div id="tab-landing" class="tab-view-section space-y-16">
+      
+      <!-- HERO SECTION -->
+      <section class="relative bg-gradient-to-b from-emerald-50/60 via-white to-slate-50 pt-16 pb-20 px-4 sm:px-6 lg:px-8 border-b border-slate-200/60">
+        <div class="max-w-5xl mx-auto text-center space-y-6">
+          <div class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 text-xs font-bold px-3.5 py-1.5 rounded-full border border-emerald-200">
+            <span>🌱 Real-Time Food Rescue & Urgency Redistribution</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-tight">
+            Don’t Waste Food. <span class="text-emerald-600 underline decoration-emerald-300 underline-offset-8">Share It.</span>
+          </h1>
+
+          <p class="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal">
+            Connect surplus food from weddings, parties, college fests, and hotels with nearby orphanages and shelters — <b>before it goes to waste</b>.
+          </p>
+
+          <!-- Dual Hero Action Buttons -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
+            <button onclick="switchTab('donor')" class="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2">
+              <i data-lucide="plus-circle" class="w-5 h-5"></i>
+              <span>Donate Surplus Food</span>
+            </button>
+            <a href="#available-food-section" class="w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-2xl text-sm border border-slate-300 transition shadow-sm flex items-center justify-center gap-2">
+              <i data-lucide="search" class="w-5 h-5 text-emerald-600"></i>
+              <span>Find Available Food</span>
+            </a>
+          </div>
+
+          <!-- Impact Statistics Ticker -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-12 max-w-4xl mx-auto">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <span class="text-xs uppercase font-bold text-slate-400">Meals Saved</span>
+              <p class="text-2xl sm:text-3xl font-black text-emerald-600 font-mono mt-1">28,450+</p>
+              <span class="text-[11px] text-slate-500">Distributed to needy</span>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <span class="text-xs uppercase font-bold text-slate-400">Food Donated</span>
+              <p class="text-2xl sm:text-3xl font-black text-slate-800 font-mono mt-1">14.2 Tons</p>
+              <span class="text-[11px] text-slate-500">Zero-landfill diversion</span>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <span class="text-xs uppercase font-bold text-slate-400">NGOs Connected</span>
+              <p class="text-2xl sm:text-3xl font-black text-emerald-600 font-mono mt-1">185+</p>
+              <span class="text-[11px] text-slate-500">Verified shelters</span>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <span class="text-xs uppercase font-bold text-slate-400">Events Supported</span>
+              <p class="text-2xl sm:text-3xl font-black text-slate-800 font-mono mt-1">420+</p>
+              <span class="text-[11px] text-slate-500">Weddings & banquets</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISUAL JOURNEY INFOGRAPHIC: HOW IT WORKS -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center space-y-2 mb-12">
+          <span class="text-xs uppercase font-bold tracking-wider text-emerald-600">End-to-End Workflow</span>
+          <h2 class="text-3xl font-extrabold text-slate-900">How Replate Works</h2>
+          <p class="text-sm text-slate-500">From the final banquet course to happy children at shelters within 45 minutes.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+          <!-- Step 1 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3 relative">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center font-bold text-xl mx-auto">
+              🎊
+            </div>
+            <span class="text-xs font-bold text-slate-400 uppercase">Step 1</span>
+            <h4 class="font-bold text-slate-900 text-base">Event Concludes</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">Weddings, hotel buffets, or college fests finish with extra fresh, untouched food.</p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3 relative">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center font-bold text-xl mx-auto">
+              🍲
+            </div>
+            <span class="text-xs font-bold text-slate-400 uppercase">Step 2</span>
+            <h4 class="font-bold text-slate-900 text-base">Surplus Food Posted</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">Organizer logs meal quantity, dietary type, and safe consumption deadline in 60 seconds.</p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3 relative">
+            <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center font-bold text-xl mx-auto">
+              ⚡
+            </div>
+            <span class="text-xs font-bold text-slate-400 uppercase">Step 3</span>
+            <h4 class="font-bold text-slate-900 text-base">Smart Matching</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">System instantly matches the nearest verified shelter based on distance, quantity, and urgency.</p>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3 relative">
+            <div class="w-12 h-12 bg-sky-100 text-sky-700 rounded-2xl flex items-center justify-center font-bold text-xl mx-auto">
+              🛵
+            </div>
+            <span class="text-xs font-bold text-slate-400 uppercase">Step 4</span>
+            <h4 class="font-bold text-slate-900 text-base">Rapid Pickup</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">Verified volunteers arrive with thermal crates and collect food using two-way OTP verification.</p>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3 relative">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center font-bold text-xl mx-auto">
+              💚
+            </div>
+            <span class="text-xs font-bold text-slate-400 uppercase">Step 5</span>
+            <h4 class="font-bold text-slate-900 text-base">People Served</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">Meals safely served to children at orphanages and elders at shelters before expiry.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- INTERACTIVE LEAFLET MAP SECTION -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="card-clean rounded-3xl p-6 md:p-8 space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Geospatial Logistics Grid</span>
+              <h3 class="text-2xl font-black text-slate-900 mt-1">Live Map: Surplus Food & Verified Shelters</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Explore available food batches, verified NGOs, and active volunteer routes in real time.</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-medium">
+              <span class="flex items-center gap-1.5 text-slate-700">
+                <span class="w-3 h-3 rounded-full bg-emerald-600"></span> Surplus Donor
+              </span>
+              <span class="flex items-center gap-1.5 text-slate-700">
+                <span class="w-3 h-3 rounded-full bg-sky-600"></span> Verified NGO / Ashram
+              </span>
+            </div>
+          </div>
+
+          <div id="replate-interactive-map" class="w-full h-[420px] rounded-2xl border border-slate-200 shadow-inner"></div>
+        </div>
+      </section>
+
+      <!-- AVAILABLE FOOD NEARBY (SURPLUS MARKETPLACE WITH FILTERS) -->
+      <section id="available-food-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <span class="text-xs uppercase font-bold text-emerald-600 tracking-wider">Live Surplus Marketplace</span>
+            <h2 class="text-3xl font-black text-slate-900 mt-1">Available Food Nearby</h2>
+            <p class="text-xs text-slate-500 mt-1">Fresh edible food ready for immediate pickup by registered organizations.</p>
+          </div>
+
+          <!-- Urgency Indicator Legend -->
+          <div class="flex items-center gap-2 text-xs">
+            <span class="badge-fresh px-2.5 py-1 rounded-full font-bold">🟢 Fresh (&gt; 3h)</span>
+            <span class="badge-collect-soon px-2.5 py-1 rounded-full font-bold">🟡 Collect Soon (1-3h)</span>
+            <span class="badge-urgent px-2.5 py-1 rounded-full font-bold">🔴 Urgent (&lt; 1h)</span>
+          </div>
+        </div>
+
+        <!-- Comprehensive Search & Filter Controls -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+            
+            <!-- Search Input (5 cols) -->
+            <div class="md:col-span-5 relative">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+              <input type="text" oninput="applySearchFilter(this.value)" placeholder="Search by event, food item (e.g., Biryani), or location..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+            </div>
+
+            <!-- Category Chips (4 cols) -->
+            <div class="md:col-span-4 flex items-center gap-1.5 overflow-x-auto text-xs">
+              <button data-category-btn="all" onclick="setCategoryFilter('all')" class="px-3 py-2 rounded-xl border border-slate-200 font-bold bg-emerald-600 text-white transition whitespace-nowrap">
+                All Food
+              </button>
+              <button data-category-btn="Cooked Hot Meals" onclick="setCategoryFilter('Cooked Hot Meals')" class="px-3 py-2 rounded-xl border border-slate-200 font-medium bg-white text-slate-700 hover:bg-slate-50 transition whitespace-nowrap">
+                Cooked Meals
+              </button>
+              <button data-category-btn="Snacks & Bakery" onclick="setCategoryFilter('Snacks & Bakery')" class="px-3 py-2 rounded-xl border border-slate-200 font-medium bg-white text-slate-700 hover:bg-slate-50 transition whitespace-nowrap">
+                Bakery
+              </button>
+            </div>
+
+            <!-- Distance Slider (3 cols) -->
+            <div class="md:col-span-3 flex items-center gap-2 text-xs bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <span class="text-slate-500 whitespace-nowrap">Radius:</span>
+              <input type="range" min="1" max="15" value="15" oninput="setDistanceFilter(this.value)" class="w-full accent-emerald-600 cursor-pointer">
+              <span id="distance-val-label" class="font-bold text-emerald-700 whitespace-nowrap">15 km</span>
+            </div>
+
+          </div>
+
+          <!-- Dietary Filter Chips -->
+          <div class="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+            <span class="text-slate-400 font-bold">Diet:</span>
+            <button data-diet-btn="all" onclick="setDietFilter('all')" class="px-2.5 py-1 rounded-lg border border-slate-200 font-bold bg-emerald-600 text-white transition">
+              All
+            </button>
+            <button data-diet-btn="Pure Vegetarian" onclick="setDietFilter('Pure Vegetarian')" class="px-2.5 py-1 rounded-lg border border-slate-200 font-medium bg-white text-slate-700 hover:bg-slate-50 transition">
+              🌿 Pure Vegetarian
+            </button>
+            <button data-diet-btn="Non-Vegetarian" onclick="setDietFilter('Non-Vegetarian')" class="px-2.5 py-1 rounded-lg border border-slate-200 font-medium bg-white text-slate-700 hover:bg-slate-50 transition">
+              🍗 Non-Vegetarian
+            </button>
+          </div>
+        </div>
+
+        <!-- Food Listings Showcase Grid -->
+        <div id="landing-food-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Dynamically populated by app.js renderLandingFoodShowcase() -->
+        </div>
+      </section>
+
+      <!-- FREQUENTLY ASKED QUESTIONS (FAQ) -->
+      <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pt-8">
+        <div class="text-center space-y-2">
+          <span class="text-xs uppercase font-bold text-emerald-600 tracking-wider">Help & Answers</span>
+          <h2 class="text-2xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <details class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm cursor-pointer group">
+            <summary class="font-bold text-slate-900 text-sm flex items-center justify-between">
+              <span>How does Replate ensure the safety of donated food?</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition"></i>
+            </summary>
+            <p class="text-slate-600 mt-2 leading-relaxed">
+              Every food listing requires the donor to specify preparation time, holding conditions, and an expiry consumption deadline. Listings automatically update through 🟢 Fresh, 🟡 Collect Soon, and 🔴 Urgent stages. Expired listings are automatically deactivated.
+            </p>
+          </details>
+
+          <details class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm cursor-pointer group">
+            <summary class="font-bold text-slate-900 text-sm flex items-center justify-between">
+              <span>Is Replate free to use for NGOs and orphanages?</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition"></i>
+            </summary>
+            <p class="text-slate-600 mt-2 leading-relaxed">
+              Yes, 100% free. Replate is dedicated to social welfare and food-waste reduction. Verified orphanages, old age homes, and community langars receive food donations at zero cost.
+            </p>
+          </details>
+
+          <details class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm cursor-pointer group">
+            <summary class="font-bold text-slate-900 text-sm flex items-center justify-between">
+              <span>Who handles the transportation and pickup of food?</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition"></i>
+            </summary>
+            <p class="text-slate-600 mt-2 leading-relaxed">
+              Our platform connects registered volunteers who transport the food in thermal bags or boxes. Alternatively, nearby NGOs with their own transport vehicles can collect directly using our secure OTP verification system.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="bg-white border-t border-slate-200 py-12 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🍃</span>
+            <span class="font-extrabold text-slate-900">Replate</span>
+            <span>&bull; Smart Surplus Food Distribution Platform</span>
+          </div>
+          <p>&copy; 2026 Replate. Built for College Capstone / Smart India Hackathon (SIH).</p>
+        </div>
+      </footer>
+
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- TAB 2: FOOD DONOR / EVENT ORGANIZER DASHBOARD -->
+    <!-- ================================================================ -->
+    <div id="tab-donor" class="tab-view-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <div class="card-clean p-6 md:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            Donor & Event Organizer Portal
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 mt-2">Create Surplus Food Listing</h2>
+          <p class="text-xs text-slate-500 mt-1">Weddings, hotel banquets, and college gatherings can register extra food in 60 seconds.</p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400 block font-medium">Platform Status</span>
+          <span class="text-sm font-bold text-emerald-700 flex items-center gap-1.5 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> 185 NGOs Standby
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Surplus Registration Form (7 cols) -->
+        <div class="lg:col-span-7 card-clean p-6 md:p-8 rounded-3xl space-y-6">
+          <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+              <i data-lucide="clipboard-edit" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-base text-slate-900">Surplus Food Details</h3>
+              <p class="text-xs text-slate-500">Provide accurate details for smart proximity matching.</p>
+            </div>
+          </div>
+
+          <form id="donor-surplus-listing-form" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Event Name *</label>
+                <input id="form-event-name" type="text" placeholder="e.g. Royal Palace Wedding Reception" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Event Type *</label>
+                <select id="form-event-type" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                  <option value="Wedding Event">Wedding Event</option>
+                  <option value="College Event / Fest">College Event / Fest</option>
+                  <option value="Hotel Buffet">Hotel Buffet</option>
+                  <option value="Birthday Party">Birthday Party</option>
+                  <option value="Corporate Function">Corporate Function</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Donor / Organizer Name *</label>
+                <input id="form-donor-name" type="text" placeholder="e.g. Grand Celebration Caterers" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Contact Phone Number *</label>
+                <input id="form-phone" type="text" placeholder="e.g. +91 98220 12345" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Food Items Available *</label>
+              <input id="form-food-items" type="text" placeholder="e.g. Basmati Rice, Dal Tadka, Paneer Gravy, 140 Chapatis" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Food Category *</label>
+                <select id="form-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                  <option value="Cooked Hot Meals">Cooked Hot Meals</option>
+                  <option value="Snacks & Bakery">Snacks & Bakery</option>
+                  <option value="Packaged Items">Packaged Items</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Dietary Classification *</label>
+                <select id="form-diet" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                  <option value="Pure Vegetarian">🌿 Pure Vegetarian</option>
+                  <option value="Non-Vegetarian">🍗 Non-Vegetarian</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Approx. Quantity (Meals) *</label>
+                <input id="form-servings" type="number" min="10" placeholder="e.g. 120" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Preparation Time *</label>
+                <input id="form-prep-time" type="text" placeholder="e.g. Today, 2:30 PM" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Recommended Consumption Deadline *</label>
+                <input id="form-deadline" type="text" placeholder="e.g. Today, 10:30 PM" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Pickup Location & Landmark *</label>
+              <input id="form-address" type="text" placeholder="e.g. Senapati Bapat Road near Marriott, Pune" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Special Instructions for Volunteers</label>
+              <textarea id="form-instructions" rows="2" placeholder="e.g. Food is packed in stainless steel containers. Please bring thermal crates." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition"></textarea>
+            </div>
+
+            <div class="pt-2">
+              <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Publish Listing as “Food Available”</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right: Active Donor Listings & Status Tracker (5 cols) -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-base text-slate-900">My Active Listings</h3>
+            <span class="text-xs font-mono text-slate-400">Live Status Tracking</span>
+          </div>
+
+          <div id="donor-listings-container" class="space-y-4 max-h-[720px] overflow-y-auto pr-1">
+            <!-- Dynamically populated by app.js renderDonorDashboard() -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- TAB 3: NGO / ORPHANAGE / FOOD RECEIVER DASHBOARD -->
+    <!-- ================================================================ -->
+    <div id="tab-receiver" class="tab-view-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <!-- Verified NGO Profile Card -->
+      <div class="card-clean p-6 md:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-sky-800 bg-sky-50 px-3 py-1 rounded-full border border-sky-200">
+              Verified Organization Portal
+            </span>
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              ✓ Verified Badge Active
+            </span>
+          </div>
+          <h2 class="text-2xl font-black text-slate-900 mt-2">Shree Ram Orphanage & Child Home</h2>
+          <p class="text-xs text-slate-500 mt-1">📍 Viman Nagar, Pune &bull; Inmates: <b>85 Children</b> &bull; Preference: <span class="text-emerald-700 font-bold">Pure Vegetarian Only</span></p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400 block font-medium">Active Needs</span>
+          <span class="text-xl font-black text-emerald-700 font-mono">85 Servings</span>
+        </div>
+      </div>
+
+      <!-- Smart Proximity Match Highlight Banner -->
+      <div id="smart-match-banner-container">
+        <!-- Dynamically injected by app.js renderReceiverDashboard() -->
+      </div>
+
+      <!-- Available Food Feed for Receivers -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-base text-slate-900">Nearby Surplus Food Listings</h3>
+          <span class="text-xs text-slate-500">Sorted by closest travel distance</span>
+        </div>
+
+        <div id="receiver-listings-feed" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically populated by app.js renderReceiverDashboard() -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- TAB 4: VOLUNTEER DELIVERY DASHBOARD -->
+    <!-- ================================================================ -->
+    <div id="tab-volunteer" class="tab-view-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <div class="card-clean p-6 md:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            Volunteer Logistics Hub
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 mt-2">Delivery Volunteer: Rahul Sharma</h2>
+          <p class="text-xs text-slate-500 mt-1">🛵 Motorcycle + Thermal Bag &bull; 42 Deliveries Completed &bull; Rating: <b>4.9 ⭐</b></p>
+        </div>
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span> Available for Pickup
+          </span>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="font-bold text-base text-slate-900">Available Pickup Tasks (Venue ➔ Shelter)</h3>
+        <div id="volunteer-tasks-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically populated by app.js renderVolunteerDashboard() -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- TAB 5: ADMINISTRATOR & VERIFICATION DASHBOARD -->
+    <!-- ================================================================ -->
+    <div id="tab-admin" class="tab-view-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <div class="card-clean p-6 md:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono font-bold text-purple-800 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
+            Administrator Command & Verification
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 mt-2">Platform Oversight & Audit Registry</h2>
+          <p class="text-xs text-slate-500 mt-1">Manage organization verification badges, inspect listings, and audit food safety.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Master Listings Table (8 cols) -->
+        <div class="lg:col-span-8 card-clean p-6 rounded-3xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-base text-slate-900">Master Surplus Food Registry</h3>
+            <span class="text-xs font-mono text-slate-400">Live Database</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="text-xs text-slate-400 border-b border-slate-100">
+                  <th class="py-3 px-4">ID</th>
+                  <th class="py-3 px-4">Event & Donor</th>
+                  <th class="py-3 px-4">Quantity</th>
+                  <th class="py-3 px-4">Matched Org</th>
+                  <th class="py-3 px-4">Urgency</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-master-table-body">
+                <!-- Dynamically populated by app.js renderAdminDashboard() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Organizations Verification Manager (4 cols) -->
+        <div class="lg:col-span-4 card-clean p-6 rounded-3xl space-y-4">
+          <h3 class="font-bold text-base text-slate-900">Organization Verification</h3>
+          <p class="text-xs text-slate-500">Only verified NGOs can claim large party food batches.</p>
+          <div id="admin-orgs-verification-list" class="space-y-3">
+            <!-- Dynamically populated by app.js renderAdminDashboard() -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================================================================ -->
+  <!-- SLIDE-OVER NOTIFICATION DRAWER -->
+  <!-- ================================================================ -->
+  <div id="notifications-slide-drawer" class="fixed inset-y-0 right-0 w-80 sm:w-96 bg-white border-l border-slate-200 z-50 p-6 flex flex-col justify-between shadow-2xl hidden">
+    <div>
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <i data-lucide="bell" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="font-bold text-base text-slate-900">Notifications</h3>
+        </div>
+        <button onclick="toggleNotificationDrawer()" class="text-slate-400 hover:text-slate-700">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Browser Push Notification Opt-in Banner -->
+      <div class="my-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex items-center justify-between">
+        <span class="text-emerald-800 font-medium">Windows Desktop Push Alerts</span>
+        <button onclick="enableBrowserPushNotifications()" class="px-2.5 py-1 bg-emerald-600 text-white font-bold rounded-lg text-[11px] shadow-sm">
+          Enable
+        </button>
+      </div>
+
+      <div id="notification-drawer-items" class="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+        <!-- Dynamically populated by app.js renderNotifications() -->
+      </div>
+    </div>
+
+    <div class="pt-4 border-t border-slate-100">
+      <button onclick="toggleNotificationDrawer()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+        Close Drawer
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-3 pointer-events-none"></div>
+
+  <!-- Core Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
